@@ -4,28 +4,57 @@ import {BlocklyComponent, BlocklyJS, Block, Value, Category, Field, Shadow } fro
 import '../../salih-blockly/blocks/customblocks';
 import '../../salih-blockly/generator/generator';
 import p5 from 'p5';
+import firebase from '../../components/firebase';
 
+import Button from '@material-ui/core/Button';
+import SaveIcon from '@material-ui/icons/CloudUpload';
+import LoadIcon from '@material-ui/icons/CloudDownload';
+import PlayIcon from '@material-ui/icons/PlayArrow';
 
-export default ({initialXml}) => {
+import {useSnackbar} from 'notistack';
+
+export default ({initialXml, user}) => {
 
   const simpleWorkspace = useRef();
   const myRef = useRef();
   const [p5Sketch, setp5Sketch] = useState(null);
+  const { enqueueSnackbar } = useSnackbar();
 
   useEffect(()=> {
     runCode();
   }, []);
 
+
+
+  const saveXml = () => {
+    
+    // get xml from blockly.
+    const Xml = generateXml();
+
+    console.log('Saving', Xml)
+    const XmlText = (new XMLSerializer).serializeToString(Xml);
+
+    firebase.doSaveSketch(user.uid, 'sketch1', XmlText)
+      .then(() => {
+        enqueueSnackbar('Sketch Saved.', {variant: 'success'});
+      })
+
+  };
+
   const loadXml = () => {
-    var XmlStr = `<xml xmlns="https://developers.google.com/blockly/xml"><Block type="logic_compare" id=":-K85}CG%w]B{*nQ)Ppo" x="0" y="0"/></xml>`
-    var Xml = Blockly.Xml.textToDom(XmlStr);
-    Blockly.Xml.domToWorkspace(Xml, simpleWorkspace.current.workspace);
+    
+    firebase.getSaveSketch(user.uid, 'sketch1').once('value', (snapshot) => {
+    
+      var Xml = Blockly.Xml.textToDom(snapshot.val());
+
+      Blockly.Xml.clearWorkspaceAndLoadFromXml(Xml, simpleWorkspace.current.workspace);
+      
+    })
     
   }
 
   const generateXml = () => {
     
-
     var Xml = Blockly.Xml.workspaceToDom(
       simpleWorkspace.current.workspace
     );
@@ -66,6 +95,10 @@ export default ({initialXml}) => {
       [/\bstroke\b/       , 'p5.stroke'],
       [/\bstrokeWeight\b/ , 'p5.strokeWeight'],
       [/\btext\b/         , 'p5.text'],
+      [/\bpush\b/          , 'p5.push'],
+      [/\bpop\b/           , 'p5.pop'],
+      [/\brotate\b/        , 'p5.rotate'],
+      [/\btranslate\b/     , 'p5.translate'],
 
       // System Variables
       [/\bframeCount\b/, 'p5.frameCount'],
@@ -122,12 +155,39 @@ export default ({initialXml}) => {
 
   return (
     <div>
-      <button onClick={generateCode}>Save Code</button>
-      <button onClick={loadXml}>Load Xml</button>
-      <button onClick={generateXml}>Xml</button>
-      <button onClick={runCode}>Run Code</button>
-      <button onClick={logCode}>Log Code</button>
       
+      
+      
+      <Button
+        variant="contained"
+        color="primary"
+        size="small"
+        startIcon={<SaveIcon />}
+        onClick={saveXml}
+        disabled={!user}
+      >
+        Save
+      </Button>
+      <Button
+        variant="contained"
+        color="primary"
+        size="small"
+        startIcon={<LoadIcon />}
+        onClick={loadXml}
+        disabled={!user}
+      >
+        Load
+      </Button>
+      <Button
+        variant="contained"
+        color="primary"
+        size="small"
+        startIcon={<PlayIcon />}
+        onClick={runCode}
+      >
+        Run
+      </Button>
+      <button onClick={logCode}>Log Code</button>
       <BlocklyComponent ref={simpleWorkspace}
         readOnly={false} trashcan={true} media={'media/'}
         move={{
@@ -154,6 +214,14 @@ export default ({initialXml}) => {
               <Block type="p5_rect" />
               <Block type="p5_point" />
               
+              
+            </Category>
+              
+            <Category name="p5 Transforms">
+              <Block type="p5_push" />
+              <Block type="p5_pop" />
+              <Block type="p5_rotate" />
+              <Block type="p5_translate" />
             </Category>
             <Category name="p5 Variables">
               <Block type="p5_sys_variable" />

@@ -154,6 +154,33 @@ Blockly.JavaScript['p5_text'] = function(block) {
     var code = `text(${_message}, ${_x}, ${_y});\n`;
     return code;
     };
+
+Blockly.JavaScript['p5_push'] = function(block) {
+    // TODO: Assemble JavaScript into code variable.
+    var code = 'push();\n';
+    return code;
+    };
+
+Blockly.JavaScript['p5_pop'] = function(block) {
+    // TODO: Assemble JavaScript into code variable.
+    var code = 'pop();\n';
+    return code;
+    };
+
+Blockly.JavaScript['p5_rotate'] = function(block) {
+    var _angle = Blockly.JavaScript.valueToCode(block, 'angle', Blockly.JavaScript.ORDER_ATOMIC);
+    // TODO: Assemble JavaScript into code variable.
+    var code = `rotate(${_angle});\n`;
+    return code;
+    };
+
+Blockly.JavaScript['p5_translate'] = function(block) {
+    var _x = Blockly.JavaScript.valueToCode(block, 'x', Blockly.JavaScript.ORDER_ATOMIC);
+    var _y = Blockly.JavaScript.valueToCode(block, 'y', Blockly.JavaScript.ORDER_ATOMIC);
+    // TODO: Assemble JavaScript into code variable.
+    var code = `translate(${_x}, ${_y});\n`;
+    return code;
+    };
     
 
 

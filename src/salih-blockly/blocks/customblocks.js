@@ -559,6 +559,102 @@ Blockly.Blocks['p5_text'] = {
   }
 };
 
+var p5_push = {
+  "type": "p5_push",
+  "message0": "Push",
+  "previousStatement": null,
+  "nextStatement": null,
+  "colour": 230,
+  "tooltip": "Save the current settings",
+  "helpUrl": ""
+}
+
+Blockly.Blocks['p5_push'] = {
+  init: function() {
+    this.jsonInit(p5_push);
+    this.setStyle('loop_blocks');
+  }
+};
+
+var p5_pop = {
+  "type": "p5_pop",
+  "message0": "Pop",
+  "previousStatement": null,
+  "nextStatement": null,
+  "colour": 230,
+  "tooltip": "Save the current settings",
+  "helpUrl": ""
+}
+
+Blockly.Blocks['p5_pop'] = {
+  init: function() {
+    this.jsonInit(p5_pop);
+    this.setStyle('loop_blocks');
+  }
+};
+
+var p5_rotate = {
+  "type": "p5_rotate",
+  "message0": "rotate %1 angle %2",
+  "args0": [
+    {
+      "type": "input_dummy"
+    },
+    {
+      "type": "input_value",
+      "name": "angle",
+      "check": "Number"
+    }
+  ],
+  "previousStatement": null,
+  "nextStatement": null,
+  "colour": 230,
+  "tooltip": "Rotate the canvas",
+  "helpUrl": ""
+}
+
+Blockly.Blocks['p5_rotate'] = {
+  init: function() {
+    this.jsonInit(p5_rotate);
+    this.setStyle('loop_blocks');
+  }
+};
+
+var p5_translate = {
+  "type": "p5_translate",
+  "message0": "translate %1 x %2 y %3",
+  "args0": [
+    {
+      "type": "input_dummy"
+    },
+    {
+      "type": "input_value",
+      "name": "x",
+      "check": "Number"
+    },
+    {
+      "type": "input_value",
+      "name": "y",
+      "check": "Number"
+    }
+  ],
+  "previousStatement": null,
+  "nextStatement": null,
+  "colour": 230,
+  "tooltip": "Translate the canvas",
+  "helpUrl": ""
+}
+
+Blockly.Blocks['p5_translate'] = {
+  init: function() {
+    this.jsonInit(p5_translate);
+    this.setStyle('loop_blocks');
+  }
+};
+
+
+
+
 
 
 
