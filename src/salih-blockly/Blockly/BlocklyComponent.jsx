@@ -35,6 +35,15 @@ class BlocklyComponent extends React.Component {
         super(props);
         this.blocklyDiv = React.createRef();
         this.toolbox = React.createRef();
+        this.onWorkspaceChanged = props.onWorkspaceChanged;
+    }
+
+    workspaceListener = (event) => {
+        this.onWorkspaceChanged && this.onWorkspaceChanged(event);
+    }
+
+    componentWillUnmount = () => {
+        this.primaryWorkspace.removeChangeListener(this.workspaceListener);
     }
 
     componentDidMount() {
@@ -55,6 +64,8 @@ class BlocklyComponent extends React.Component {
             },
         );
 
+        this.primaryWorkspace.addChangeListener (this.workspaceListener);
+        
         if (initialXml) {
             Blockly.Xml.domToWorkspace(Blockly.Xml.textToDom(initialXml), this.primaryWorkspace);
         }

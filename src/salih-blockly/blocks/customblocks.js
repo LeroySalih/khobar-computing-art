@@ -652,6 +652,92 @@ Blockly.Blocks['p5_translate'] = {
   }
 };
 
+var p5_ellipse = {
+  "type": "p5_ellipse",
+  "message0": "ellipse %1 x %2 y %3 width %4 height %5 ",
+  "args0": [
+    {
+      "type": "input_dummy"
+    },
+    {
+      "type": "input_value",
+      "name": "cx",
+      "check": "Number"
+    },
+    {
+      "type": "input_value",
+      "name": "cy",
+      "check": "Number"
+    },
+    {
+      "type": "input_value",
+      "name": "width",
+      "check": "Number"
+    },
+    {
+      "type": "input_value",
+      "name": "height",
+      "check": "Number"
+    }
+  ],
+  "inputsInline": false,
+  "previousStatement": null,
+  "nextStatement": null,
+  "colour": 300,
+  "tooltip": "Draw an ellipse",
+  "helpUrl": ""
+}
+
+Blockly.Blocks['p5_ellipse'] = {
+  init: function() {
+    this.jsonInit(p5_ellipse);
+    this.setStyle('loop_blocks');
+  }
+};
+
+var p5_line = {
+  "type": "p5_line",
+  "message0": "line %1 x1 %2 y1 %3 x2 %4 y2 %5 ",
+  "args0": [
+    {
+      "type": "input_dummy"
+    },
+    {
+      "type": "input_value",
+      "name": "x1",
+      "check": "Number"
+    },
+    {
+      "type": "input_value",
+      "name": "y1",
+      "check": "Number"
+    },
+    {
+      "type": "input_value",
+      "name": "x2",
+      "check": "Number"
+    },
+    {
+      "type": "input_value",
+      "name": "y2",
+      "check": "Number"
+    }
+  ],
+  "inputsInline": false,
+  "previousStatement": null,
+  "nextStatement": null,
+  "colour": 300,
+  "tooltip": "Draw an line",
+  "helpUrl": ""
+}
+
+Blockly.Blocks['p5_line'] = {
+  init: function() {
+    this.jsonInit(p5_line);
+    this.setStyle('loop_blocks');
+  }
+};
+
 
 
 

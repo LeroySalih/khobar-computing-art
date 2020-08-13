@@ -26,13 +26,17 @@ class Firebase {
    
   doCreateUserWithEmailAndPassword = (email, password) => this.auth.createUserWithEmailAndPassword(email, password);
   doSignIn = (email, password) => this.auth.signInWithEmailAndPassword(email, password);
-
   doSignOut = () => this.auth.signOut();
 
   sketches = () => this.db.ref('sketches');
   sketch = (sketchId) => this.db.ref('sketches').child(sketchId);
 
-  doSaveSketch = (uid, sketchId, xmlText) => this.db.ref('users').child(uid).child('sketches').child(sketchId).child('xml').set(xmlText);
+  getSketchRef = (uid, sketchId) => this.db.ref('users').child(uid).child('sketches').child(sketchId);
+  doSaveSketchXml = (uid, sketchId, xmlText) => this.db.ref('users').child(uid).child('sketches').child(sketchId).child('xml').set(xmlText);
+  doSaveSketch = (uid, sketchId, sketch) => this.db.ref('users').child(uid).child('sketches').child(sketchId).set(sketch);
+  doSaveSketchName = (uid, sketchId, name) => this.db.ref('users').child(uid).child('sketches').child(sketchId).child('name').set(name);
+
+  
   getSaveSketch = (uid, sketchId) => this.db.ref('users').child(uid).child('sketches').child(sketchId).child('xml');
   user = (uid) => this.db.ref('users').child(uid);
 

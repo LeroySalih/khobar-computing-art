@@ -1,4 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
+import styled from 'styled-components';
+import {useLocation} from 'react-router-dom';
+
+
 import Blockly from 'blockly/core';
 import {BlocklyComponent, BlocklyJS, Block, Value, Category, Field, Shadow } from '../../salih-blockly';
 import '../../salih-blockly/blocks/customblocks';
@@ -7,61 +11,134 @@ import p5 from 'p5';
 import firebase from '../../components/firebase';
 
 import Button from '@material-ui/core/Button';
+
 import SaveIcon from '@material-ui/icons/CloudUpload';
 import LoadIcon from '@material-ui/icons/CloudDownload';
 import PlayIcon from '@material-ui/icons/PlayArrow';
+import EditImage from '@material-ui/icons/Edit';
 
 import {useSnackbar} from 'notistack';
 
-export default ({initialXml, user}) => {
+const EditIcon = styled(EditImage)`
+  font-size: 1rem;
+`
+
+const TextField = styled.input`
+  margin: 5px;
+  font-size: 1rem;
+  border: none;
+
+  :hover {
+    border-bottom: red solid 1px;
+    cursor: pointer;
+  }
+  :focus {
+    border-bottom: red solid 1px;
+  }
+  
+`
+
+const MenuButton = styled(Button)`
+  margin: 5px;
+`
+
+export default ({initialXml, currentUser}) => {
+
+  let userId = null;
+  let sketchId = null;
+  
+  // get the hash key to determine the 
+  // userId and sketchId
+  const location = useLocation();
+
+  
+  const [sketchXml, setSketchXml] = useState(initialXml);
+
+  // we have been passed sketch details, so we'll load it.
+  if (location.hash.length) {
+    
+    userId = location.hash.split(':::')[0];
+    sketchId = location.hash.split(':::')[1];
+
+    userId = userId.replace('#', '');
+  }
+  
+  console.log(`Extracted: ${userId}, ${sketchId}`);
 
   const simpleWorkspace = useRef();
   const myRef = useRef();
   const [p5Sketch, setp5Sketch] = useState(null);
   const { enqueueSnackbar } = useSnackbar();
+  const [sketchName, setSketchName] = useState('');
+  const [sketchOwner, setSketchOwner] = useState(null);
 
   useEffect(()=> {
-    runCode();
-  }, []);
 
-
-
-  const saveXml = () => {
+    firebase.user(userId).on('value', snapshot => {
+      // load sketch owner.
+      setSketchOwner(snapshot.val())
+    });
     
-    // get xml from blockly.
-    const Xml = generateXml();
+    if (sketchOwner && sketchId !== null){
+      var xml = loadXmlFromUser(sketchOwner, sketchId);
 
-    console.log('Saving', Xml)
-    const XmlText = (new XMLSerializer).serializeToString(Xml);
-
-    firebase.doSaveSketch(user.uid, 'sketch1', XmlText)
-      .then(() => {
-        enqueueSnackbar('Sketch Saved.', {variant: 'success'});
-      })
-
-  };
-
-  const loadXml = () => {
-    
-    firebase.getSaveSketch(user.uid, 'sketch1').once('value', (snapshot) => {
-    
-      var Xml = Blockly.Xml.textToDom(snapshot.val());
-
-      Blockly.Xml.clearWorkspaceAndLoadFromXml(Xml, simpleWorkspace.current.workspace);
+      if (xml) {
+        var xmlDom = Blockly.Xml.textToDom(xml);
+        Blockly.Xml.domToWorkspace( xmlDom, simpleWorkspace.current.workspace);
+      }
       
-    })
+    }
+
+    if (sketchOwner && sketchId && sketchOwner.sketches[sketchId].name){
+      setSketchName (sketchOwner.sketches[sketchId].name);
+    }
     
+  }, [sketchOwner]);
+
+
+  const getSketch = (user, sketchId) => {
+    return user && user.sketches && user.sketches[sketchId]
   }
 
-  const generateXml = () => {
+  const updateSketchName = (newTitle) => {
+    console.log(`Updating Sketch Title: ${newTitle}`);
     
+    firebase.getSketchRef( sketchOwner.uid, sketchId).child('name').set(newTitle); 
+  }
+
+  const saveXmlToUser = () => {
+    
+    // get xml from blockly.
     var Xml = Blockly.Xml.workspaceToDom(
       simpleWorkspace.current.workspace
     );
 
-    console.log((new XMLSerializer).serializeToString(Xml))
-    return Xml;
+    console.log('Saving')
+    const xmlText = (new XMLSerializer).serializeToString(Xml);
 
+    firebase.doSaveSketch(sketchOwner.uid, sketchId, {name: 'sketch1', xml: xmlText})
+      .then(() => {
+        enqueueSnackbar('Sketch Saved.', {variant: 'success'});
+      })
+      .catch((e) => {
+        enqueueSnackbar(e.message, {variant: 'error'});
+      })
+
+  };
+
+  const loadXmlFromUser = (user, sketchId) => {
+
+    const xmlText = user && user.sketches && user.sketches[sketchId] && user.sketches[sketchId].xml 
+
+    console.log(xmlText);
+    
+    if (xmlText) {
+      var Xml = Blockly.Xml.textToDom(xmlText);
+
+      Blockly.Xml.clearWorkspaceAndLoadFromXml(Xml, simpleWorkspace.current.workspace);
+
+      enqueueSnackbar("Sketch Reloaded", {variant: 'success'});
+    }
   }
 
   const logCode = () => {
@@ -73,7 +150,7 @@ export default ({initialXml, user}) => {
     this.setState({sketchCode: code});
   }
 
-  const generateCode = (oldCode) => {
+  const parseCode = (oldCode) => {
 
     let newCode = oldCode;
 
@@ -91,6 +168,7 @@ export default ({initialXml, user}) => {
       [/\brect\b/         ,'p5.rect'],
       [/\bfill\b/         ,'p5.fill'],
       [/\bellipse\b/      , 'p5.ellipse'],
+      [/\bline\b/         , 'p5.line'],
       [/\bpoint\b/        , 'p5.point'],
       [/\bstroke\b/       , 'p5.stroke'],
       [/\bstrokeWeight\b/ , 'p5.strokeWeight'],
@@ -123,6 +201,7 @@ export default ({initialXml, user}) => {
     return newCode;
   }
 
+
   const runCode = () => {
     
     try {
@@ -133,10 +212,9 @@ export default ({initialXml, user}) => {
       );
 
       // convert the code to a format p5 can use.
-      code = generateCode(code);
-      console.log(code);
-
-      // generate the new sketch
+      code = parseCode(code);
+      
+      // generate the new sketch function
       var newSketch = new Function('p5', code);
 
       // if there is already a sketch visible, remove it.
@@ -145,40 +223,39 @@ export default ({initialXml, user}) => {
         p5Sketch.remove();
       };
 
+      // create a new P5 sketch and update the state with the new sketch
       setp5Sketch(new p5(newSketch, myRef.current));
 
     } catch (e) {
-      console.log(e)
+      enqueueSnackbar(e.message, {variant: 'error'});
     }
     
   }
 
+  const handleNameUpdate = (newName) => {
+    console.log(`Changing to ${newName}`);
+    
+    firebase.doSaveSketchName(sketchOwner.uid, sketchId, newName)
+          .then(()=> enqueueSnackbar('Sketch Renamed', {variant: 'success'}))
+          .catch((e) => enqueueSnackbar(e.message, {variant: 'error'}))
+          
+  }
+
   return (
     <div>
-      
-      
-      
-      <Button
-        variant="contained"
-        color="primary"
-        size="small"
-        startIcon={<SaveIcon />}
-        onClick={saveXml}
-        disabled={!user}
-      >
-        Save
-      </Button>
-      <Button
-        variant="contained"
-        color="primary"
-        size="small"
-        startIcon={<LoadIcon />}
-        onClick={loadXml}
-        disabled={!user}
-      >
-        Load
-      </Button>
-      <Button
+      { sketchId &&  
+      (<>
+      <TextField 
+          disabled={!sketchOwner}
+          value={sketchName}
+          onChange={(e) => setSketchName(e.target.value)}
+          onBlur={(e) => handleNameUpdate(e.target.value)}
+      ></TextField>
+      <EditIcon/>
+      </>
+      )
+      }
+      <MenuButton
         variant="contained"
         color="primary"
         size="small"
@@ -186,16 +263,52 @@ export default ({initialXml, user}) => {
         onClick={runCode}
       >
         Run
-      </Button>
-      <button onClick={logCode}>Log Code</button>
+      </MenuButton>
+      
+      <MenuButton
+        variant="contained"
+        color="primary"
+        size="small"
+        startIcon={<SaveIcon />}
+        onClick={saveXmlToUser}
+        disabled={!sketchOwner}
+      >
+        Save
+      </MenuButton>
+      <MenuButton
+        variant="contained"
+        color="primary"
+        size="small"
+        startIcon={<SaveIcon />}
+        onClick={saveXmlToUser}
+        disabled={!sketchOwner}
+      >
+        Save
+      </MenuButton>
+      <MenuButton
+        variant="contained"
+        color="primary"
+        size="small"
+        startIcon={<LoadIcon />}
+        onClick={() => loadXmlFromUser(sketchOwner, sketchId)}
+        disabled={!sketchOwner}
+      >
+       Reload
+      </MenuButton>
+      
+      
+      
       <BlocklyComponent ref={simpleWorkspace}
-        readOnly={false} trashcan={true} media={'media/'}
+        
+        readOnly={false} 
+        trashcan={true} 
+        media={'media/'}
         move={{
           scrollbars: true,
           drag: true,
           wheel: true
         }}
-        initialXml={initialXml}>
+        initialXml={sketchXml}>
             <Category name="p5 Functions" colour="330">
               <Block type="p5_setup"/>
               <Block type="p5_draw"/>
@@ -212,11 +325,12 @@ export default ({initialXml, user}) => {
 
               <Block type="p5_text" />
               <Block type="p5_rect" />
+              <Block type="p5_ellipse" />
+              <Block type="p5_line" />
               <Block type="p5_point" />
               
               
             </Category>
-              
             <Category name="p5 Transforms">
               <Block type="p5_push" />
               <Block type="p5_pop" />
@@ -393,42 +507,42 @@ export default ({initialXml, user}) => {
               </Block>
               </Category>
             <Category name="Loops" colour="#5ba55b">
-        <Block type="controls_repeat_ext">
-          <Value name="TIMES">
-            <Shadow type="math_number">
-              <Field name="NUM">10</Field>
-            </Shadow>
-          </Value>
-        </Block>
-        <Block type="controls_whileUntil">
-          <Field name="MODE">WHILE</Field>
-        </Block>
-        <Block type="controls_for">
-          <Field name="VAR" id=":U]m%4_bSR;MXoN7V?dw">i</Field>
-          <Value name="FROM">
-            <Shadow type="math_number">
-              <Field name="NUM">1</Field>
-            </Shadow>
-          </Value>
-          <Value name="TO">
-            <Shadow type="math_number">
-              <Field name="NUM">10</Field>
-            </Shadow>
-          </Value>
-          <Value name="BY">
-            <Shadow type="math_number">
-              <Field name="NUM">1</Field>
-            </Shadow>
-          </Value>
-        </Block>
-        <Block type="controls_forEach">
-          <Field name="VAR" id="_;V2Sy-zf{FV4}lV]#:~">j</Field>
-        </Block>
-        <Block type="controls_flow_statements">
-          <Field name="FLOW">BREAK</Field>
-        </Block>
-      </Category>
-      </BlocklyComponent>
+              <Block type="controls_repeat_ext">
+                <Value name="TIMES">
+                  <Shadow type="math_number">
+                    <Field name="NUM">10</Field>
+                  </Shadow>
+                </Value>
+              </Block>
+              <Block type="controls_whileUntil">
+                <Field name="MODE">WHILE</Field>
+              </Block>
+              <Block type="controls_for">
+                <Field name="VAR" id=":U]m%4_bSR;MXoN7V?dw">i</Field>
+                <Value name="FROM">
+                  <Shadow type="math_number">
+                    <Field name="NUM">1</Field>
+                  </Shadow>
+                </Value>
+                <Value name="TO">
+                  <Shadow type="math_number">
+                    <Field name="NUM">10</Field>
+                  </Shadow>
+                </Value>
+                <Value name="BY">
+                  <Shadow type="math_number">
+                    <Field name="NUM">1</Field>
+                  </Shadow>
+                </Value>
+              </Block>
+              <Block type="controls_forEach">
+                <Field name="VAR" id="_;V2Sy-zf{FV4}lV]#:~">j</Field>
+              </Block>
+              <Block type="controls_flow_statements">
+                <Field name="FLOW">BREAK</Field>
+              </Block>
+            </Category>
+            </BlocklyComponent>
       <div ref={myRef}></div> 
     </div>
   );

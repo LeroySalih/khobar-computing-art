@@ -181,6 +181,26 @@ Blockly.JavaScript['p5_translate'] = function(block) {
     var code = `translate(${_x}, ${_y});\n`;
     return code;
     };
-    
+
+Blockly.JavaScript['p5_ellipse'] = function(block) {
+    var _cx = Blockly.JavaScript.valueToCode(block, 'cx', Blockly.JavaScript.ORDER_ATOMIC);
+    var _cy = Blockly.JavaScript.valueToCode(block, 'cy', Blockly.JavaScript.ORDER_ATOMIC);
+    var _width = Blockly.JavaScript.valueToCode(block, 'width', Blockly.JavaScript.ORDER_ATOMIC);
+    var _height = Blockly.JavaScript.valueToCode(block, 'height', Blockly.JavaScript.ORDER_ATOMIC);
+    // TODO: Assemble JavaScript into code variable.
+    var code = `ellipse(${_cx}, ${_cy}, ${_width}, ${_height});\n`;
+    return code;
+    };
+
+Blockly.JavaScript['p5_line'] = function(block) {
+    var _x1 = Blockly.JavaScript.valueToCode(block, 'x1', Blockly.JavaScript.ORDER_ATOMIC);
+    var _y1 = Blockly.JavaScript.valueToCode(block, 'y1', Blockly.JavaScript.ORDER_ATOMIC);
+    var _x2 = Blockly.JavaScript.valueToCode(block, 'x2', Blockly.JavaScript.ORDER_ATOMIC);
+    var _y2 = Blockly.JavaScript.valueToCode(block, 'y2', Blockly.JavaScript.ORDER_ATOMIC);
+    // TODO: Assemble JavaScript into code variable.
+    var code = `line(${_x1}, ${_y1}, ${_x2}, ${_y2});\n`;
+    return code;
+    };
+
 
 
